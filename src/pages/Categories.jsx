@@ -3,11 +3,9 @@ import ProductCard from "../components/ProductCard";
 import { API_URL } from "../config";
 
 function CategoriesPage() {
-  const [products, setProducts] = useState([]);
-  const [selectedCategory, setSelectedCategory] =
-    useState("Electronics");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const params = new URLSearchParams(window.location.search);
+
+  const categoryFromURL = params.get("category");
 
   const categories = [
     "Electronics",
@@ -15,6 +13,17 @@ function CategoriesPage() {
     "Home & Living",
     "Sports",
   ];
+
+  const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] =
+    useState(
+      categories.includes(categoryFromURL)
+        ? categoryFromURL
+        : "Electronics"
+    );
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     async function loadProducts() {
@@ -66,9 +75,17 @@ function CategoriesPage() {
         {categories.map((category) => (
           <button
             key={category}
-            onClick={() =>
-              setSelectedCategory(category)
-            }
+            onClick={() => {
+              setSelectedCategory(category);
+
+              window.history.replaceState(
+                null,
+                "",
+                `/categories?category=${encodeURIComponent(
+                  category
+                )}`
+              );
+            }}
             className={
               selectedCategory === category
                 ? "active-category"

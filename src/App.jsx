@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import Categories from "./components/Categories";
+import HomeCategories from "./components/HomeCategories";
 import FeaturedProducts from "./components/FeaturedProducts";
 import WhyChooseUs from "./components/WhyChooseUs";
 import Newsletter from "./components/Newsletter";
@@ -57,10 +57,10 @@ function App() {
           <AdminProducts />
         ) : currentPage === "/admin/orders" ? (
           <AdminOrders />
-          ) : currentPage === "/admin/users" ? (
-  <AdminUsers />
-  ) : currentPage === "/admin/stats" ? (
-  <AdminStats />
+        ) : currentPage === "/admin/users" ? (
+          <AdminUsers />
+        ) : currentPage === "/admin/stats" ? (
+          <AdminStats />
         ) : currentPage === "/admin" ? (
           <AdminDashboard />
         ) : currentPage === "/checkout" ? (
@@ -84,7 +84,7 @@ function App() {
         ) : (
           <>
             <Hero />
-            <Categories />
+            <HomeCategories />
             <FeaturedProducts />
             <WhyChooseUs />
             <Newsletter />
