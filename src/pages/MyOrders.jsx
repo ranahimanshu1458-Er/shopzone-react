@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -17,7 +18,7 @@ function MyOrders() {
     async function loadOrders() {
       try {
         const response = await fetch(
-          "http://127.0.0.1:5001/api/orders/my-orders",
+          `${API_URL}/api/orders/my-orders`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -28,7 +29,9 @@ function MyOrders() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.message || "Failed to load orders");
+          throw new Error(
+            data.message || "Failed to load orders"
+          );
         }
 
         setOrders(data);
@@ -58,7 +61,9 @@ function MyOrders() {
         <h2>My Orders</h2>
         <p>{message}</p>
 
-        <button onClick={() => (window.location.href = "/login")}>
+        <button
+          onClick={() => (window.location.href = "/login")}
+        >
           Login
         </button>
       </section>
@@ -74,7 +79,9 @@ function MyOrders() {
           <p>You have not placed any orders yet.</p>
 
           <button
-            onClick={() => (window.location.href = "/products")}
+            onClick={() =>
+              (window.location.href = "/products")
+            }
           >
             Start Shopping
           </button>
@@ -82,35 +89,49 @@ function MyOrders() {
       ) : (
         <div className="orders-list">
           {orders.map((order) => (
-            <div className="order-card" key={order._id}>
+            <div
+              className="order-card"
+              key={order._id}
+            >
               <h3>Order #{order._id}</h3>
 
-            <p>
-  <strong>Order Status:</strong> {order.status}
-</p>
+              <p>
+                <strong>Order Status:</strong>{" "}
+                {order.status}
+              </p>
 
-<p>
-  <strong>Payment Method:</strong> {order.paymentMethod}
-</p>
+              <p>
+                <strong>Payment Method:</strong>{" "}
+                {order.paymentMethod}
+              </p>
 
-<p>
-  <strong>Payment Status:</strong> {order.paymentStatus}
-</p>
+              <p>
+                <strong>Payment Status:</strong>{" "}
+                {order.paymentStatus}
+              </p>
 
               <p>
                 <strong>Total:</strong>{" "}
-                ₹{Number(order.totalAmount).toLocaleString("en-IN")}
+                ₹
+                {Number(order.totalAmount).toLocaleString(
+                  "en-IN"
+                )}
               </p>
 
               <p>
                 <strong>Date:</strong>{" "}
-                {new Date(order.createdAt).toLocaleDateString("en-IN")}
+                {new Date(
+                  order.createdAt
+                ).toLocaleDateString("en-IN")}
               </p>
 
               <h4>Items</h4>
 
               {order.items.map((item, index) => (
-                <div className="order-item" key={index}>
+                <div
+                  className="order-item"
+                  key={index}
+                >
                   <span>
                     {item.name} × {item.quantity}
                   </span>

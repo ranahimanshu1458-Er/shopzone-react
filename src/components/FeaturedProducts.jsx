@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
+import { API_URL } from "../config";
 
 function FeaturedProducts() {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/api/products")
+    fetch(`${API_URL}/api/products`)
       .then((response) => response.json())
       .then((data) => {
         setProducts(data);

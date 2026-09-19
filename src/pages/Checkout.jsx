@@ -1,6 +1,7 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useState } from "react";
 import { clearCart } from "../redux/cartSlice";
+import { API_URL } from "../config";
 
 function Checkout() {
   const cartItems = useSelector((state) => state.cart.items);
@@ -73,7 +74,7 @@ const [cvv, setCvv] = useState("");
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5001/api/orders",
+        `${API_URL}/api/orders`,
         {
           method: "POST",
           headers: {

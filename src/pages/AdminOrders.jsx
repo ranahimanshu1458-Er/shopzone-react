@@ -1,57 +1,59 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminOrders() {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
   const user = JSON.parse(
     localStorage.getItem("shopzoneUser")
   );
 
   const token = localStorage.getItem("shopzoneToken");
 
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-
   useEffect(() => {
     if (!user || user.role !== "admin") {
+      setMessage("Access denied. Admin only.");
       setLoading(false);
       return;
     }
 
-    loadOrders();
-  }, []);
-
-  async function loadOrders() {
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:5001/api/orders/admin/all",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to load orders"
+    async function loadOrders() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/orders/admin/all`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to load orders."
+          );
+        }
+
+        setOrders(data);
+      } catch (error) {
+        console.error("LOAD ADMIN ORDERS ERROR:", error);
+        setMessage("Unable to load orders.");
+      } finally {
+        setLoading(false);
       }
-
-      setOrders(data);
-    } catch (error) {
-      console.error(error);
-      setMessage("Unable to load orders.");
-    } finally {
-      setLoading(false);
     }
-  }
 
-  async function handleStatusChange(orderId, status) {
+    loadOrders();
+  }, [token, user]);
+
+  async function updateOrderStatus(orderId, status) {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5001/api/orders/admin/${orderId}/status`,
+        `${API_URL}/api/orders/admin/${orderId}/status`,
         {
           method: "PUT",
           headers: {
@@ -67,15 +69,13 @@ function AdminOrders() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message ||
-            "Failed to update order status."
+        throw new Error(
+          data.message || "Failed to update order status."
         );
-        return;
       }
 
-      setOrders((currentOrders) =>
-        currentOrders.map((order) =>
+      setOrders((previousOrders) =>
+        previousOrders.map((order) =>
           order._id === orderId
             ? {
                 ...order,
@@ -85,39 +85,42 @@ function AdminOrders() {
         )
       );
 
-      setMessage(
-        "Order status updated successfully."
-      );
+      setMessage("Order status updated successfully.");
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to update order status.");
+      console.error(
+        "UPDATE ORDER STATUS ERROR:",
+        error
+      );
+
+      setMessage(
+        error.message ||
+          "Unable to update order status."
+      );
     }
-  }
-
-  if (!user || user.role !== "admin") {
-    return (
-      <section className="admin-page">
-        <h2>Access Denied</h2>
-
-        <p>
-          Only administrators can access this page.
-        </p>
-
-        <button
-          onClick={() => (window.location.href = "/")}
-        >
-          Go Home
-        </button>
-      </section>
-    );
   }
 
   if (loading) {
     return (
       <section className="admin-page">
         <h2>Manage Orders</h2>
-
         <p>Loading orders...</p>
+      </section>
+    );
+  }
+
+  if (!user || user.role !== "admin") {
+    return (
+      <section className="admin-page">
+        <h2>Access Denied</h2>
+        <p>Only administrators can manage orders.</p>
+
+        <button
+          onClick={() =>
+            (window.location.href = "/")
+          }
+        >
+          Go Home
+        </button>
       </section>
     );
   }
@@ -126,18 +129,16 @@ function AdminOrders() {
     <section className="admin-page">
       <h2>Manage Orders</h2>
 
-      <button
-        onClick={() =>
-          (window.location.href = "/admin")
-        }
-      >
-        Back to Dashboard
-      </button>
-
-      {message && <p>{message}</p>}
+      {message && (
+        <p className="admin-message">
+          {message}
+        </p>
+      )}
 
       {orders.length === 0 ? (
-        <p>No orders have been placed yet.</p>
+        <div>
+          <p>No orders found.</p>
+        </div>
       ) : (
         <div className="admin-orders-list">
           {orders.map((order) => (
@@ -145,7 +146,9 @@ function AdminOrders() {
               className="admin-order-card"
               key={order._id}
             >
-              <h3>Order #{order._id}</h3>
+              <h3>
+                Order #{order._id}
+              </h3>
 
               <p>
                 <strong>Customer:</strong>{" "}
@@ -158,38 +161,12 @@ function AdminOrders() {
               </p>
 
               <p>
-                <strong>Order Status:</strong>
+                <strong>Total:</strong>{" "}
+                ₹
+                {Number(
+                  order.totalAmount
+                ).toLocaleString("en-IN")}
               </p>
-
-              <select
-                value={order.status}
-                onChange={(event) =>
-                  handleStatusChange(
-                    order._id,
-                    event.target.value
-                  )
-                }
-              >
-                <option value="Pending">
-                  Pending
-                </option>
-
-                <option value="Confirmed">
-                  Confirmed
-                </option>
-
-                <option value="Shipped">
-                  Shipped
-                </option>
-
-                <option value="Delivered">
-                  Delivered
-                </option>
-
-                <option value="Cancelled">
-                  Cancelled
-                </option>
-              </select>
 
               <p>
                 <strong>Payment Method:</strong>{" "}
@@ -202,15 +179,7 @@ function AdminOrders() {
               </p>
 
               <p>
-                <strong>Total:</strong>{" "}
-                ₹
-                {Number(
-                  order.totalAmount
-                ).toLocaleString("en-IN")}
-              </p>
-
-              <p>
-                <strong>Date:</strong>{" "}
+                <strong>Order Date:</strong>{" "}
                 {new Date(
                   order.createdAt
                 ).toLocaleDateString("en-IN")}
@@ -218,37 +187,89 @@ function AdminOrders() {
 
               <h4>Items</h4>
 
-              {order.items.map((item, index) => (
-                <div
-                  className="admin-order-item"
-                  key={index}
-                >
-                  <span>
-                    {item.name} × {item.quantity}
-                  </span>
+              {order.items?.map(
+                (item, index) => (
+                  <div
+                    className="order-item"
+                    key={index}
+                  >
+                    <span>
+                      {item.name} ×{" "}
+                      {item.quantity}
+                    </span>
 
-                  <span>
-                    ₹
-                    {Number(
-                      item.price * item.quantity
-                    ).toLocaleString("en-IN")}
-                  </span>
-                </div>
-              ))}
+                    <span>
+                      ₹
+                      {Number(
+                        item.price *
+                          item.quantity
+                      ).toLocaleString(
+                        "en-IN"
+                      )}
+                    </span>
+                  </div>
+                )
+              )}
 
               <h4>Delivery Address</h4>
 
               <p>
-                {order.shippingAddress.name}
+                {order.shippingAddress?.name}
                 <br />
-                {order.shippingAddress.phone}
+                {order.shippingAddress?.phone}
                 <br />
-                {order.shippingAddress.address}
+                {order.shippingAddress?.address}
               </p>
+
+              <div className="admin-order-status">
+                <label>
+                  <strong>
+                    Order Status:
+                  </strong>
+                </label>
+
+                <select
+                  value={order.status}
+                  onChange={(event) =>
+                    updateOrderStatus(
+                      order._id,
+                      event.target.value
+                    )
+                  }
+                >
+                  <option value="Pending">
+                    Pending
+                  </option>
+
+                  <option value="Confirmed">
+                    Confirmed
+                  </option>
+
+                  <option value="Shipped">
+                    Shipped
+                  </option>
+
+                  <option value="Delivered">
+                    Delivered
+                  </option>
+
+                  <option value="Cancelled">
+                    Cancelled
+                  </option>
+                </select>
+              </div>
             </div>
           ))}
         </div>
       )}
+
+      <button
+        onClick={() =>
+          (window.location.href = "/admin")
+        }
+      >
+        Back to Dashboard
+      </button>
     </section>
   );
 }

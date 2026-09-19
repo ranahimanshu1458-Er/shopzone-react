@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "../config";
 
 function Register() {
   const [name, setName] = useState("");
@@ -6,21 +7,24 @@ function Register() {
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  async function handleSubmit(event) {
+  async function handleRegister(event) {
     event.preventDefault();
 
-    if (
-      name.trim() === "" ||
-      email.trim() === "" ||
-      password.trim() === ""
-    ) {
+    setMessage("");
+
+    if (!name || !email || !password) {
       setMessage("Please fill in all fields.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setMessage("Password must be at least 6 characters.");
       return;
     }
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5001/api/auth/register",
+        `${API_URL}/api/auth/register`,
         {
           method: "POST",
           headers: {
@@ -42,50 +46,77 @@ function Register() {
       }
 
       setMessage(
-        "Registration successful! You can now login."
+        "Registration successful. Redirecting to login..."
       );
 
-      setName("");
-      setEmail("");
-      setPassword("");
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1000);
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to connect to server.");
+      console.error("REGISTER ERROR:", error);
+
+      setMessage(
+        "Unable to connect to the server. Please try again."
+      );
     }
   }
 
   return (
-    <section className="register-page">
-      <h2>Create Your ShopZone Account</h2>
+    <section className="auth-page">
+      <div className="auth-card">
+        <h2>Register</h2>
 
-      <form className="register-form" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter your name"
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-        />
+        <form onSubmit={handleRegister}>
+          <input
+            type="text"
+            placeholder="Name"
+            value={name}
+            onChange={(event) =>
+              setName(event.target.value)
+            }
+          />
 
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(event) =>
+              setEmail(event.target.value)
+            }
+          />
 
-        <input
-          type="password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(event) =>
+              setPassword(event.target.value)
+            }
+          />
 
-        <button type="submit">
-          Register
-        </button>
-      </form>
+          <button type="submit">
+            Register
+          </button>
+        </form>
 
-      {message && <p>{message}</p>}
+        {message && (
+          <p className="auth-message">
+            {message}
+          </p>
+        )}
+
+        <p>
+          Already have an account?{" "}
+          <button
+            type="button"
+            onClick={() =>
+              (window.location.href = "/login")
+            }
+          >
+            Login
+          </button>
+        </p>
+      </div>
     </section>
   );
 }

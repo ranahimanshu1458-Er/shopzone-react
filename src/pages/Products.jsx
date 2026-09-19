@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
+import { API_URL } from "../config";
 
 function Products() {
   const [products, setProducts] = useState([]);
@@ -11,7 +12,7 @@ function Products() {
 
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5001/api/products")
+    fetch(`${API_URL}/api/products`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Failed to fetch products");

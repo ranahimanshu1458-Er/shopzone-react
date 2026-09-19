@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../redux/cartSlice";
+import { API_URL } from "../config";
 
 function ProductDetails() {
   const [product, setProduct] = useState(null);
@@ -12,7 +13,7 @@ function ProductDetails() {
   useEffect(() => {
     const productId = window.location.pathname.split("/")[2];
 
-    fetch(`http://127.0.0.1:5001/api/products/${productId}`)
+    fetch(`${API_URL}/api/products/${productId}`)
       .then((response) => {
         if (!response.ok) {
           throw new Error("Product not found");

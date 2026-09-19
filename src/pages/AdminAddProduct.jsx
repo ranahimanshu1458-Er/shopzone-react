@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "../config";
 
 function AdminAddProduct() {
   const user = JSON.parse(
@@ -33,7 +34,7 @@ function AdminAddProduct() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:5001/api/products",
+       `${API_URL}/api/products` ,
         {
           method: "POST",
           headers: {

@@ -1,57 +1,59 @@
 import { useEffect, useState } from "react";
+import { API_URL } from "../config";
 
 function AdminUsers() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
   const user = JSON.parse(
     localStorage.getItem("shopzoneUser")
   );
 
   const token = localStorage.getItem("shopzoneToken");
 
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-
   useEffect(() => {
     if (!user || user.role !== "admin") {
+      setMessage("Access denied. Admin only.");
       setLoading(false);
       return;
     }
 
-    loadUsers();
-  }, []);
-
-  async function loadUsers() {
-    try {
-      const response = await fetch(
-        "http://127.0.0.1:5001/api/admin/users",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.message || "Failed to load users"
+    async function loadUsers() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/admin/users`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to load users."
+          );
+        }
+
+        setUsers(data);
+      } catch (error) {
+        console.error("LOAD USERS ERROR:", error);
+        setMessage("Unable to load users.");
+      } finally {
+        setLoading(false);
       }
-
-      setUsers(data);
-    } catch (error) {
-      console.error(error);
-      setMessage("Unable to load users.");
-    } finally {
-      setLoading(false);
     }
-  }
 
-  async function handleRoleChange(userId, role) {
+    loadUsers();
+  }, [token, user]);
+
+  async function updateUserRole(userId, role) {
     try {
       const response = await fetch(
-        `http://127.0.0.1:5001/api/admin/users/${userId}/role`,
+        `${API_URL}/api/admin/users/${userId}/role`,
         {
           method: "PUT",
           headers: {
@@ -67,14 +69,13 @@ function AdminUsers() {
       const data = await response.json();
 
       if (!response.ok) {
-        setMessage(
-          data.message || "Failed to update role."
+        throw new Error(
+          data.message || "Failed to update user role."
         );
-        return;
       }
 
-      setUsers((currentUsers) =>
-        currentUsers.map((currentUser) =>
+      setUsers((previousUsers) =>
+        previousUsers.map((currentUser) =>
           currentUser._id === userId
             ? {
                 ...currentUser,
@@ -86,9 +87,25 @@ function AdminUsers() {
 
       setMessage("User role updated successfully.");
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to update user role.");
+      console.error(
+        "UPDATE USER ROLE ERROR:",
+        error
+      );
+
+      setMessage(
+        error.message ||
+          "Unable to update user role."
+      );
     }
+  }
+
+  if (loading) {
+    return (
+      <section className="admin-page">
+        <h2>Manage Users</h2>
+        <p>Loading users...</p>
+      </section>
+    );
   }
 
   if (!user || user.role !== "admin") {
@@ -97,24 +114,16 @@ function AdminUsers() {
         <h2>Access Denied</h2>
 
         <p>
-          Only administrators can access this page.
+          Only administrators can manage users.
         </p>
 
         <button
-          onClick={() => (window.location.href = "/")}
+          onClick={() =>
+            (window.location.href = "/")
+          }
         >
           Go Home
         </button>
-      </section>
-    );
-  }
-
-  if (loading) {
-    return (
-      <section className="admin-page">
-        <h2>Manage Users</h2>
-
-        <p>Loading users...</p>
       </section>
     );
   }
@@ -123,15 +132,11 @@ function AdminUsers() {
     <section className="admin-page">
       <h2>Manage Users</h2>
 
-      <button
-        onClick={() =>
-          (window.location.href = "/admin")
-        }
-      >
-        Back to Dashboard
-      </button>
-
-      {message && <p>{message}</p>}
+      {message && (
+        <p className="admin-message">
+          {message}
+        </p>
+      )}
 
       {users.length === 0 ? (
         <p>No users found.</p>
@@ -162,13 +167,13 @@ function AdminUsers() {
               </p>
 
               <label>
-                <strong>Change Role:</strong>
+                <strong>Change Role:</strong>{" "}
               </label>
 
               <select
                 value={currentUser.role}
                 onChange={(event) =>
-                  handleRoleChange(
+                  updateUserRole(
                     currentUser._id,
                     event.target.value
                   )
@@ -186,6 +191,14 @@ function AdminUsers() {
           ))}
         </div>
       )}
+
+      <button
+        onClick={() =>
+          (window.location.href = "/admin")
+        }
+      >
+        Back to Dashboard
+      </button>
     </section>
   );
 }

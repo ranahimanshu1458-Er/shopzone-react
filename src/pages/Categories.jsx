@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
+import { API_URL } from "../config";
 
 function CategoriesPage() {
   const [products, setProducts] = useState([]);
@@ -19,7 +20,7 @@ function CategoriesPage() {
     async function loadProducts() {
       try {
         const response = await fetch(
-          "http://127.0.0.1:5001/api/products"
+          "fetch(`${API_URL}/api/products`)"
         );
 
         if (!response.ok) {

@@ -1,32 +1,32 @@
 import { useState } from "react";
+import { API_URL } from "../config";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
-  async function handleSubmit(event) {
+  async function handleLogin(event) {
     event.preventDefault();
 
-    if (email.trim() === "" || password.trim() === "") {
-      setMessage("Please enter your email and password.");
+    setMessage("");
+
+    if (!email || !password) {
+      setMessage("Please enter email and password.");
       return;
     }
 
     try {
-      const response = await fetch(
-        "http://127.0.0.1:5001/api/auth/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
 
       const data = await response.json();
 
@@ -41,42 +41,66 @@ function Login() {
         JSON.stringify(data.user)
       );
 
-     setMessage(`Welcome, ${data.user.name}!`);
+      setMessage(`Welcome, ${data.user.name}!`);
 
-setTimeout(() => {
-  window.location.href = "/";
-}, 500);
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1000);
     } catch (error) {
-      console.error(error);
-      setMessage("Unable to connect to server.");
+      console.error("LOGIN ERROR:", error);
+      setMessage(
+        "Unable to connect to the server. Please try again."
+      );
     }
   }
 
   return (
-    <section className="login-page">
-      <h2>Login to ShopZone</h2>
+    <section className="auth-page">
+      <div className="auth-card">
+        <h2>Login</h2>
 
-      <form className="login-form" onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-        />
+        <form onSubmit={handleLogin}>
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(event) =>
+              setEmail(event.target.value)
+            }
+          />
 
-        <input
-          type="password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-        />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(event) =>
+              setPassword(event.target.value)
+            }
+          />
 
-        <button type="submit">
-          Login
-        </button>
-      </form>
+          <button type="submit">
+            Login
+          </button>
+        </form>
 
-      {message && <p>{message}</p>}
+        {message && (
+          <p className="auth-message">
+            {message}
+          </p>
+        )}
+
+        <p>
+          Don't have an account?{" "}
+          <button
+            type="button"
+            onClick={() =>
+              (window.location.href = "/register")
+            }
+          >
+            Register
+          </button>
+        </p>
+      </div>
     </section>
   );
 }
