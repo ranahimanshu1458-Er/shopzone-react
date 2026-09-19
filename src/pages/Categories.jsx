@@ -20,18 +20,24 @@ function CategoriesPage() {
     async function loadProducts() {
       try {
         const response = await fetch(
-          "fetch(`${API_URL}/api/products`)"
+          `${API_URL}/api/products`
         );
-
-        if (!response.ok) {
-          throw new Error("Failed to load products");
-        }
 
         const data = await response.json();
 
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to load products"
+          );
+        }
+
         setProducts(data);
       } catch (error) {
-        console.error("CATEGORY PRODUCTS ERROR:", error);
+        console.error(
+          "CATEGORY PRODUCTS ERROR:",
+          error
+        );
+
         setError("Unable to load products.");
       } finally {
         setLoading(false);
@@ -60,7 +66,9 @@ function CategoriesPage() {
         {categories.map((category) => (
           <button
             key={category}
-            onClick={() => setSelectedCategory(category)}
+            onClick={() =>
+              setSelectedCategory(category)
+            }
             className={
               selectedCategory === category
                 ? "active-category"
@@ -84,29 +92,36 @@ function CategoriesPage() {
         </p>
       )}
 
-      {!loading && !error && filteredProducts.length === 0 && (
-        <div className="category-message">
-          <h3>No products available</h3>
-          <p>
-            There are currently no products available in the{" "}
-            <strong>{selectedCategory}</strong> category.
-          </p>
-        </div>
-      )}
+      {!loading &&
+        !error &&
+        filteredProducts.length === 0 && (
+          <div className="category-message">
+            <h3>No products available</h3>
 
-      {!loading && !error && filteredProducts.length > 0 && (
-        <div className="product-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={{
-                ...product,
-                id: product._id,
-              }}
-            />
-          ))}
-        </div>
-      )}
+            <p>
+              There are currently no products available
+              in the{" "}
+              <strong>{selectedCategory}</strong>{" "}
+              category.
+            </p>
+          </div>
+        )}
+
+      {!loading &&
+        !error &&
+        filteredProducts.length > 0 && (
+          <div className="product-grid">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product._id}
+                product={{
+                  ...product,
+                  id: product._id,
+                }}
+              />
+            ))}
+          </div>
+        )}
     </section>
   );
 }
